@@ -1,4 +1,5 @@
 import os
+import re
 import sublime
 import sublime_plugin
 import subprocess
@@ -8,12 +9,33 @@ SETTINGS_FILE = 'Python Path to File.sublime-settings'
 settings = sublime.load_settings(SETTINGS_FILE)
 
 SCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'module_finder.py')
+module_path_pattern = re.compile(r'^\.*\w+(\.\w+)*$')
 
 
 class PythonPathToFileCommand(sublime_plugin.WindowCommand):
 
-    def __init__(self, *args, **kwargs):
-        super(PythonPathToFileCommand, self).__init__(*args, **kwargs)
+    def run(self):
+        view = self.window.active_view()
+        text = view.substr(view.sel()[0])
+        self.window.show_input_panel('Python module name', text, self.on_done, self.on_change, self.on_cancel)
+
+    def on_done(self, input):
+        if not module_path_pattern.match(input):
+            sublime.status_message('Invalid python path: "%s"' % input)
+            return
+
+        filename = self._get_module_filename(input)
+        if filename is None:
+            sublime.status_message('Module %s not found' % input)
+        else:
+            sublime.status_message('Module %s found on %s' % (input, filename))
+            self.window.open_file(filename, sublime.TRANSIENT)
+
+    def on_change(self, input):
+        pass
+
+    def on_cancel(self):
+        pass
 
     def _get_module_filename(self, python_path):
         si = None
@@ -34,22 +56,3 @@ class PythonPathToFileCommand(sublime_plugin.WindowCommand):
         result = python.stdout.readline().lstrip('>').strip()
         python.kill()
         return result if result != 'empty' else None
-
-    def run(self):
-        view = self.window.active_view()
-        text = view.substr(view.sel()[0])
-        self.window.show_input_panel('Python module name', text, self.on_done, self.on_change, self.on_cancel)
-
-    def on_done(self, input):
-        filename = self._get_module_filename(input)
-        if filename is None:
-            sublime.status_message('Module %s not found' % input)
-        else:
-            sublime.status_message('Module %s found on %s' % (input, filename))
-            self.window.open_file(filename, sublime.TRANSIENT)
-
-    def on_change(self, input):
-        pass
-
-    def on_cancel(self):
-        pass
