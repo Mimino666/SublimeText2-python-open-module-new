@@ -1,3 +1,4 @@
+import os
 import sublime
 import sublime_plugin
 import subprocess
@@ -5,6 +6,8 @@ import subprocess
 
 SETTINGS_FILE = 'Python Path to File.sublime-settings'
 settings = sublime.load_settings(SETTINGS_FILE)
+
+SCRIPT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'module_finder.py')
 
 
 class PythonPathToFileCommand(sublime_plugin.WindowCommand):
@@ -19,7 +22,7 @@ class PythonPathToFileCommand(sublime_plugin.WindowCommand):
             si.dwFlags = subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
         python = subprocess.Popen(
-            ['python', '-u', '-i', 'script.py'] + settings.get('path', []),
+            ['python', '-u', '-i', SCRIPT_PATH] + settings.get('path', []),
             shell=False,
             stderr=subprocess.STDOUT,
             stdin=subprocess.PIPE,
