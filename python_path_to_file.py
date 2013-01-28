@@ -3,17 +3,6 @@ import sublime_plugin
 import subprocess
 
 
-PYTHON_SCRIPT = '''import pkgutil
-def get_module_filename(python_path):
-    try:
-        mloader = pkgutil.get_loader(python_path)
-    except:
-        mloader = None
-    if mloader is None:
-        print 'empty'
-    else:
-        print mloader.get_filename()
-'''
 
 
 class PythonPathToFileCommand(sublime_plugin.WindowCommand):
@@ -28,7 +17,7 @@ class PythonPathToFileCommand(sublime_plugin.WindowCommand):
             si.dwFlags = subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
         python = subprocess.Popen(
-            ['python', '-u', '-i', '-c', PYTHON_SCRIPT],
+            ['python', '-u', '-i', 'script.py'],
             shell=False,
             stderr=subprocess.STDOUT,
             stdin=subprocess.PIPE,
