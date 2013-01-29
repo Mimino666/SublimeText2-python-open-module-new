@@ -17,7 +17,13 @@ LOCAL_DIR = path.dirname(path.abspath(__file__))
 SYNTAX_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.tmLanguage')
 COLOR_SCHEME_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.stTheme')
 
-module_path_pattern = re.compile(r'^\s*\.*(\w+)?(\.\w+)*\s*$')
+module_path_pattern = re.compile(r'\s*\+?^\s*\.*(\w+)?(\.\w+)*\s*$')
+
+si = None
+if hasattr(subprocess, 'STARTUPINFO'):
+    si = subprocess.STARTUPINFO()
+    si.dwFlags = subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = subprocess.SW_HIDE
 
 
 def debug(obj):
@@ -38,6 +44,9 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
 
     def on_done(self, input):
         input = input.strip()
+        open_new_window = input.startswith('+')
+        input = input.lstrip('+').strip()
+
         if not input:
             return
         if not module_path_pattern.match(input):
@@ -54,11 +63,23 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         else:
             sublime.status_message('Module "%s" found: %s' % (input, filename))
 
-            if self._is_inside_project(filename):
+            if open_new_window:
+                self._open_new_window(filename)
+            elif self._is_inside_project(filename):
                 self.window.open_file(filename)
                 self.window.run_command('reveal_in_side_bar')
             else:
                 self.window.open_file(filename, sublime.TRANSIENT)
+
+    def _open_new_window(self, filename):
+        subl_command = 'sublime_text' if sublime.platform() == 'windows' else 'subl'
+        try:
+            subprocess.Popen(
+                [subl_command, path.dirname(filename), filename],
+                startupinfo=si)
+        except OSError:
+            sublime.status_message('Unable to open `%s` in a new window.'
+                'Make sure `%s` is in $PATH.' % (filename, subl_command))
 
     def _is_inside_project(self, filename):
         filename = path.realpath(filename)
@@ -111,11 +132,6 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         else:
             python_exec = settings.get('python_executable') or 'python'
             try:
-                si = None
-                if hasattr(subprocess, 'STARTUPINFO'):
-                    si = subprocess.STARTUPINFO()
-                    si.dwFlags = subprocess.STARTF_USESHOWWINDOW
-                    si.wShowWindow = subprocess.SW_HIDE
                 python = subprocess.Popen(
                     [python_exec, '-u', '-c', 'import sys; print sys.path'],
                     stdout=subprocess.PIPE,
