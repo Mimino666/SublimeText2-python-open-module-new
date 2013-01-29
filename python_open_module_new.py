@@ -69,12 +69,14 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
             return False
 
         def visit(dir_path):
+            # include only top-level packages
             if self._is_package(dir_path):
                 project_folders.add(path.dirname(dir_path))
-            for next in os.listdir(dir_path):
-                next = path.join(dir_path, next)
-                if path.isdir(next) and not exclude(next):
-                    visit(next)
+            else:
+                for next in os.listdir(dir_path):
+                    next = path.join(dir_path, next)
+                    if path.isdir(next) and not exclude(next):
+                        visit(next)
 
         for dir_path in self.window.folders():
             visit(dir_path)
@@ -109,7 +111,8 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                 result_path = sys.path
         return (path_modifications.get('prepend', []) +
                 result_path +
-                path_modifications.get('append', []))
+                path_modifications.get('append', []) +
+                self._get_project_folders())
 
     def _get_python_script(self, dir_path, script_name):
         '''Return the absolute path to the python script "script_name"
