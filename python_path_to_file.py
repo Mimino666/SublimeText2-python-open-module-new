@@ -58,7 +58,6 @@ class PythonPathToFileCommand(sublime_plugin.WindowCommand):
             cwd=None,
             startupinfo=si
         )
-        python.stdin.write('get_module_filename("%s")\n' % python_path.replace(r'"', r'\"'))
-        result = python.stdout.readline().lstrip('>').strip()
-        python.kill()
-        return result if result != 'empty' else None
+        stdout, stderr = python.communicate('get_module_filename("%s")' % python_path)
+        stdout = stdout.strip()
+        return stdout if stdout != 'empty' else None

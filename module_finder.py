@@ -12,5 +12,7 @@ def get_module_filename(python_path):
     else:
         print mloader.get_filename()
 
-
 sys.path += sys.argv[1:]
+# disable prompts for easier parsing
+sys.ps1 = ''
+sys.ps2 = ''
