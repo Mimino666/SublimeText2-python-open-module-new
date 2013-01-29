@@ -159,4 +159,10 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                 return
             if not self._is_package(filename):
                 return
-        return self._get_python_script(filename, relative_path[-1])
+
+        if self._is_package(path.join(filename, relative_path[-1])):
+            filename = path.join(filename, relative_path[-1])
+            return self._get_python_script(filename, '__init__')
+        else:
+            return self._get_python_script(filename, relative_path[-1])
+
