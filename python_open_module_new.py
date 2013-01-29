@@ -53,8 +53,23 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
             sublime.status_message('Module "%s" not found' % input)
         else:
             sublime.status_message('Module "%s" found: %s' % (input, filename))
-            self.window.open_file(filename, sublime.TRANSIENT)
-            self.window.run_command('reveal_in_side_bar')
+
+            if self._is_inside_project(filename):
+                self.window.open_file(filename)
+                self.window.run_command('reveal_in_side_bar')
+            else:
+                self.window.open_file(filename, sublime.TRANSIENT)
+
+    def _is_inside_project(self, filename):
+        filename = path.realpath(filename)
+        for folder in self.window.folders():
+            folder = path.realpath(folder)
+            if folder == filename:
+                return True
+            folder += os.sep
+            if path.commonprefix([folder, filename]) == folder:
+                return True
+        return False
 
     def _get_project_folders(self):
         '''Return all the project directories, which contain a python package.
