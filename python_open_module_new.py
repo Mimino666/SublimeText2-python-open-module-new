@@ -1,5 +1,5 @@
+import imp
 import os.path as path
-import pkgutil
 import re
 import sublime
 import sublime_plugin
@@ -72,15 +72,19 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         return result_path
 
     def _get_module_filename(self, python_path):
-        mloader = None
+        sys_path = self._get_path()
         try:
-            old_path, sys.path = sys.path, self._get_path()
-            mloader = pkgutil.get_loader(python_path)
+            for bit in python_path.split('.'):
+                debug(sys_path)
+                debug(bit)
+                sys_path = [imp.find_module(bit, sys_path)[1]]
+            sys_path = sys_path[0]
+            if path.isdir(sys_path):
+                sys_path = self._get_python_script(sys_path, '__init__')
         except:
             pass
-        finally:
-            sys.path = old_path
-        return mloader.get_filename() if mloader else None
+        else:
+            return sys_path
 
     def _get_python_script(self, dir_path, script_name):
         for ext in settings.get('python_extensions', []):
