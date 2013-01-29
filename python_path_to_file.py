@@ -1,8 +1,10 @@
 import os.path as path
+import pkgutil
 import re
 import sublime
 import sublime_plugin
 import subprocess
+import sys
 
 
 SETTINGS_FILE = 'Python Path to File.sublime-settings'
@@ -12,7 +14,6 @@ LOCAL_DIR = path.dirname(path.abspath(__file__))
 SYNTAX_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.tmLanguage')
 COLOR_SCHEME_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.stTheme')
 
-SCRIPT_PATH = path.join(LOCAL_DIR, 'module_finder.py')
 module_path_pattern = re.compile(r'^\s*\.*\w+(\.\w+)*\s*$')
 
 
@@ -27,10 +28,10 @@ class PythonPathToFileCommand(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.active_view()
         text = view.substr(view.sel()[0])
-        view = self.window.show_input_panel('Python module path', text, self.on_done, None, None)
-        view.sel().add(view.visible_region())
-        view.settings().set('syntax', SYNTAX_FILENAME)
-        view.settings().set('color_scheme', COLOR_SCHEME_FILENAME)
+        panel_view = self.window.show_input_panel('Python module path', text, self.on_done, None, None)
+        panel_view.sel().add(panel_view.visible_region())
+        panel_view.settings().set('syntax', SYNTAX_FILENAME)
+        panel_view.settings().set('color_scheme', COLOR_SCHEME_FILENAME)
 
     def on_done(self, input):
         input = input.strip()
@@ -51,24 +52,35 @@ class PythonPathToFileCommand(sublime_plugin.WindowCommand):
             sublime.status_message('Module "%s" found: %s' % (input, filename))
             self.window.open_file(filename, sublime.TRANSIENT)
 
+    def _get_path(self):
+        try:
+            si = None
+            if hasattr(subprocess, 'STARTUPINFO'):
+                si = subprocess.STARTUPINFO()
+                si.dwFlags = subprocess.STARTF_USESHOWWINDOW
+                si.wShowWindow = subprocess.SW_HIDE
+            python = subprocess.Popen(
+                ['python', '-u', '-c', 'import sys; print sys.path'],
+                shell=False,
+                stdout=subprocess.PIPE,
+                startupinfo=si
+            )
+            result_path = eval(python.communicate()[0])
+        except:
+            result_path = sys.path
+        result_path += settings.get('path', [])
+        return result_path
+
     def _get_module_filename(self, python_path):
-        si = None
-        if hasattr(subprocess, 'STARTUPINFO'):
-            si = subprocess.STARTUPINFO()
-            si.dwFlags = subprocess.STARTF_USESHOWWINDOW
-            si.wShowWindow = subprocess.SW_HIDE
-        python = subprocess.Popen(
-            ['python', '-u', '-i', SCRIPT_PATH] + settings.get('path', []),
-            shell=False,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            cwd=None,
-            startupinfo=si
-        )
-        stdout, stderr = python.communicate('get_module_filename("%s")' % python_path)
-        stdout = stdout.strip()
-        return stdout if stdout != 'empty' else None
+        mloader = None
+        try:
+            old_path, sys.path = sys.path, self._get_path()
+            mloader = pkgutil.get_loader(python_path)
+        except:
+            pass
+        finally:
+            sys.path = old_path
+        return mloader.get_filename() if mloader else None
 
     def _get_python_script(self, dir_path, script_name):
         for ext in settings.get('python_extensions', []):
