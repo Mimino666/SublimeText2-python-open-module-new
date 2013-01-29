@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 
-SETTINGS_FILE = 'Python Path to File.sublime-settings'
+SETTINGS_FILE = 'Python Open Module New.sublime-settings'
 settings = sublime.load_settings(SETTINGS_FILE)
 
 LOCAL_DIR = path.dirname(path.abspath(__file__))
@@ -23,7 +23,7 @@ def debug(obj):
             {'line': '=' * 40, 'obj': obj})
 
 
-class PythonPathToFileCommand(sublime_plugin.WindowCommand):
+class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
 
     def run(self):
         view = self.window.active_view()
