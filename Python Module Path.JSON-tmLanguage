@@ -1,0 +1,17 @@
+{ "name": "Python module path",
+  "scopeName": "text.python_module_path",
+  "fileTypes": [""],
+  "patterns": [
+    {
+        "match": "^\\.*\\w+(\\.\\w+)*$",
+        "name": "valid.text.python_module_path",
+        "comment": "Valid Python module path"
+    },
+    {
+        "match": "^.*$",
+        "name": "invalid.text.python_module_path",
+        "comment": "Invalid Python module path"
+    }
+  ],
+  "uuid": "df0e97d4-06fc-4786-9427-04ffe1637b78"
+}
