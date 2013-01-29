@@ -14,7 +14,7 @@
 			<key>comment</key>
 			<string>Valid Python module path</string>
 			<key>match</key>
-			<string>^\s*\.*\w+(\.\w+)*\s*$</string>
+			<string>^\s*\.*(\w+)?(\.\w+)*\s*$</string>
 			<key>name</key>
 			<string>valid.text.python_module_path</string>
 		</dict>

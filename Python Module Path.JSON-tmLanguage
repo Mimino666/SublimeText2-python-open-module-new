@@ -3,7 +3,7 @@
   "fileTypes": [""],
   "patterns": [
     {
-        "match": "^\\s*\\.*\\w+(\\.\\w+)*\\s*$",
+        "match": "^\\s*\\.*(\\w+)?(\\.\\w+)*\\s*$",
         "name": "valid.text.python_module_path",
         "comment": "Valid Python module path"
     },

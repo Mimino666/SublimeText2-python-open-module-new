@@ -17,7 +17,7 @@ LOCAL_DIR = path.dirname(path.abspath(__file__))
 SYNTAX_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.tmLanguage')
 COLOR_SCHEME_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.stTheme')
 
-module_path_pattern = re.compile(r'^\s*\.*\w+(\.\w+)*\s*$')
+module_path_pattern = re.compile(r'^\s*\.*(\w+)?(\.\w+)*\s*$')
 
 
 def debug(obj):
@@ -165,4 +165,3 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
             return self._get_python_script(filename, '__init__')
         else:
             return self._get_python_script(filename, relative_path[-1])
-
