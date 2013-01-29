@@ -109,6 +109,7 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         if path_modifications.get('replace'):
             result_path = path_modifications['replace']
         else:
+            python_exec = settings.get('python_executable') or 'python'
             try:
                 si = None
                 if hasattr(subprocess, 'STARTUPINFO'):
@@ -116,8 +117,7 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                     si.dwFlags = subprocess.STARTF_USESHOWWINDOW
                     si.wShowWindow = subprocess.SW_HIDE
                 python = subprocess.Popen(
-                    ['python', '-u', '-c', 'import sys; print sys.path'],
-                    shell=False,
+                    [python_exec, '-u', '-c', 'import sys; print sys.path'],
                     stdout=subprocess.PIPE,
                     startupinfo=si
                 )

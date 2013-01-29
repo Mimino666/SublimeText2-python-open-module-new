@@ -11,6 +11,11 @@
         "replace": []
     },
 
+    // Path to the python executable which sys.path is used for module search.
+    // If you are using virtual environments, you want to change this to Python
+    // executable of your environment.
+    "python_executable": "",
+
     // Extensions of Python scripts. Used for package discovering.
     "python_extensions": [".py", ".rpy", ".pyw", ".cpy"]
 }
