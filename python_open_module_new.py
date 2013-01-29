@@ -38,13 +38,13 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         if not input:
             return
         if not module_path_pattern.match(input):
-            sublime.status_message('Invalid python path: "%s"' % input)
+            sublime.status_message('Invalid python module path: "%s"' % input)
             return
 
         if input.startswith('.'):
             filename = self._get_relative_module_filename(input)
         else:
-            filename = self._get_module_filename(input)
+            filename = self._get_absolute_module_filename(input)
 
         if filename is None:
             sublime.status_message('Module "%s" not found' % input)
@@ -52,7 +52,12 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
             sublime.status_message('Module "%s" found: %s' % (input, filename))
             self.window.open_file(filename, sublime.TRANSIENT)
 
-    def _get_path(self):
+    def _get_sys_path(self):
+        '''Return the sys path to be searched.
+        We cannot simply use sys.path inside sublime script, because it is different.
+        Also take into account user preferences, such as venv, path setting and
+        current project.
+        '''
         try:
             si = None
             if hasattr(subprocess, 'STARTUPINFO'):
@@ -71,35 +76,44 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         result_path += settings.get('path', [])
         return result_path
 
-    def _get_module_filename(self, python_path):
-        sys_path = self._get_path()
-        try:
-            for bit in python_path.split('.'):
-                debug(sys_path)
-                debug(bit)
-                sys_path = [imp.find_module(bit, sys_path)[1]]
-            sys_path = sys_path[0]
-            if path.isdir(sys_path):
-                sys_path = self._get_python_script(sys_path, '__init__')
-        except:
-            pass
-        else:
-            return sys_path
-
     def _get_python_script(self, dir_path, script_name):
+        '''Return the absolute path to the python script "script_name"
+        (given without an extension) which should be contained somewhere inside
+        "dir_path" directory.
+        '''
         for ext in settings.get('python_extensions', []):
             filename = path.join(dir_path, script_name + ext)
             if path.exists(filename):
-                return filename
+                return path.abspath(filename)
 
     def _is_package(self, dir_path):
-        return bool(self._get_python_script(dir_path, '__init__'))
+        '''True, if the "dir_path" points to a Python package directory.
+        '''
+        return path.isdir(dir_path) and bool(self._get_python_script(dir_path, '__init__'))
 
-    def _get_relative_module_filename(self, python_path):
-        python_path = python_path.split('.')
+    def _get_absolute_module_filename(self, absolute_path):
+        '''Return the absolute path to the python script from the given
+        absolute module path.
+        '''
+        sys_path = self._get_sys_path()
+        try:
+            for bit in absolute_path.split('.'):
+                sys_path = [imp.find_module(bit, sys_path)[1]]
+            python_filename = sys_path[0]
+            if path.isdir(python_filename):
+                python_filename = self._get_python_script(python_filename, '__init__')
+            return python_filename
+        except:
+            pass
+
+    def _get_relative_module_filename(self, relative_path):
+        '''Return the absolute path to the python script from the given
+        relative module path. Relative path is relative to the working file.
+        '''
+        relative_path = relative_path.split('.')
 
         filename = self.window.active_view().file_name()
-        for bit in python_path[:-1]:
+        for bit in relative_path[:-1]:
             if not bit:
                 filename = path.dirname(filename)
             else:
@@ -110,4 +124,4 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                 return
             if not self._is_package(filename):
                 return
-        return self._get_python_script(filename, python_path[-1])
+        return self._get_python_script(filename, relative_path[-1])
