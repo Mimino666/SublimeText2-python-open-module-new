@@ -28,6 +28,7 @@ class PythonPathToFileCommand(sublime_plugin.WindowCommand):
         view = self.window.active_view()
         text = view.substr(view.sel()[0])
         view = self.window.show_input_panel('Python module path', text, self.on_done, None, None)
+        view.sel().add(view.visible_region())
         view.settings().set('syntax', SYNTAX_FILENAME)
         view.settings().set('color_scheme', COLOR_SCHEME_FILENAME)
 
