@@ -86,23 +86,30 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         Also take into account user preferences, such as venv, path setting and
         current project.
         '''
-        try:
-            si = None
-            if hasattr(subprocess, 'STARTUPINFO'):
-                si = subprocess.STARTUPINFO()
-                si.dwFlags = subprocess.STARTF_USESHOWWINDOW
-                si.wShowWindow = subprocess.SW_HIDE
-            python = subprocess.Popen(
-                ['python', '-u', '-c', 'import sys; print sys.path'],
-                shell=False,
-                stdout=subprocess.PIPE,
-                startupinfo=si
-            )
-            result_path = eval(python.communicate()[0])
-        except:
-            result_path = sys.path
-        result_path = result_path + settings.get('path', []) + self._get_project_folders()
-        return result_path
+        path_modifications = settings.get('path',
+            {'prepend': [], 'append': [], 'replace': []})
+
+        if path_modifications.get('replace'):
+            result_path = path_modifications['replace']
+        else:
+            try:
+                si = None
+                if hasattr(subprocess, 'STARTUPINFO'):
+                    si = subprocess.STARTUPINFO()
+                    si.dwFlags = subprocess.STARTF_USESHOWWINDOW
+                    si.wShowWindow = subprocess.SW_HIDE
+                python = subprocess.Popen(
+                    ['python', '-u', '-c', 'import sys; print sys.path'],
+                    shell=False,
+                    stdout=subprocess.PIPE,
+                    startupinfo=si
+                )
+                result_path = eval(python.communicate()[0])
+            except:
+                result_path = sys.path
+        return (path_modifications.get('prepend', []) +
+                result_path +
+                path_modifications.get('append', []))
 
     def _get_python_script(self, dir_path, script_name):
         '''Return the absolute path to the python script "script_name"

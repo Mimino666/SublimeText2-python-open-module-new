@@ -1,4 +1,16 @@
 {
-  "path": [],
-  "python_extensions": [".py", ".rpy", ".pyw", ".cpy"]
+    // Modify the sys.path contents.
+    "path":
+    {
+        // These paths are searched before any of sys.path.
+        "prepend": [],
+        // These paths are searched after any of sys.path.
+        "append": [],
+        // Contents of sys.path are replaced with these, if non-empty.
+        // Values of "prepend" and "append" are still applied.
+        "replace": []
+    },
+
+    // Extensions of Python scripts. Used for package discovering.
+    "python_extensions": [".py", ".rpy", ".pyw", ".cpy"]
 }
