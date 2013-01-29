@@ -1,4 +1,6 @@
+from fnmatch import fnmatch
 import imp
+import os
 import os.path as path
 import re
 import sublime
@@ -9,6 +11,7 @@ import sys
 
 SETTINGS_FILE = 'Python Open Module New.sublime-settings'
 settings = sublime.load_settings(SETTINGS_FILE)
+prefs = sublime.load_settings('Preferences.sublime-settings')
 
 LOCAL_DIR = path.dirname(path.abspath(__file__))
 SYNTAX_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.tmLanguage')
@@ -51,6 +54,31 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         else:
             sublime.status_message('Module "%s" found: %s' % (input, filename))
             self.window.open_file(filename, sublime.TRANSIENT)
+            self.window.run_command('reveal_in_side_bar')
+
+    def _get_project_folders(self):
+        '''Return all the project directories, which contain a python package.
+        '''
+        exclude_folders = [path.join('*', folder) for folder in prefs.get('folder_exclude_patterns', [])]
+        project_folders = set()
+
+        def exclude(dir_path):
+            for pattern in exclude_folders:
+                if fnmatch(dir_path, pattern):
+                    return True
+            return False
+
+        def visit(dir_path):
+            if self._is_package(dir_path):
+                project_folders.add(path.dirname(dir_path))
+            for next in os.listdir(dir_path):
+                next = path.join(dir_path, next)
+                if path.isdir(next) and not exclude(next):
+                    visit(next)
+
+        for dir_path in self.window.folders():
+            visit(dir_path)
+        return list(project_folders)
 
     def _get_sys_path(self):
         '''Return the sys path to be searched.
@@ -73,7 +101,7 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
             result_path = eval(python.communicate()[0])
         except:
             result_path = sys.path
-        result_path += settings.get('path', [])
+        result_path = result_path + settings.get('path', []) + self._get_project_folders()
         return result_path
 
     def _get_python_script(self, dir_path, script_name):
