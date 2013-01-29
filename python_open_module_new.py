@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 
-SETTINGS_FILE = 'Python Open Module New.sublime-settings'
+SETTINGS_FILE = 'Python Open Module (New).sublime-settings'
 settings = sublime.load_settings(SETTINGS_FILE)
 prefs = sublime.load_settings('Preferences.sublime-settings')
 

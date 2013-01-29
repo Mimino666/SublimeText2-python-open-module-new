@@ -12,20 +12,20 @@
                 "children":
                 [
                     {
-                        "caption": "PythonOpenModuleNew",
+                        "caption": "PythonOpenModule(New)",
                         "children":
                         [
                             {
                                 "command": "open_file", "args":
                                 {
-                                    "file": "${packages}/Python Open Module New/Python Open Module New.sublime-settings"
+                                    "file": "${packages}/Python Open Module (New)/Python Open Module (New).sublime-settings"
                                 },
                                 "caption": "Settings – Default"
                             },
                             {
                                 "command": "open_file", "args":
                                 {
-                                    "file": "${packages}/User/Python Open Module New.sublime-settings"
+                                    "file": "${packages}/User/Python Open Module (New).sublime-settings"
                                 },
                                 "caption": "Settings – User"
                             },
