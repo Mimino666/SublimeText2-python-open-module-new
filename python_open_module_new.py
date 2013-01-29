@@ -50,7 +50,7 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         if not input:
             return
         if not module_path_pattern.match(input):
-            sublime.status_message('Invalid python module path: "%s"' % input)
+            sublime.status_message('Invalid python module path: `%s`' % input)
             return
 
         if input.startswith('.'):
@@ -59,9 +59,9 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
             filename = self._get_absolute_module_filename(input)
 
         if filename is None:
-            sublime.status_message('Module "%s" not found' % input)
+            sublime.status_message('Module `%s` not found' % input)
         else:
-            sublime.status_message('Module "%s" found: %s' % (input, filename))
+            sublime.status_message('Module `%s` found: %s' % (input, filename))
 
             if open_new_window:
                 self._open_new_window(filename)
@@ -146,9 +146,9 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                 self._get_project_folders())
 
     def _get_python_script(self, dir_path, script_name):
-        '''Return the absolute path to the python script "script_name"
+        '''Return the absolute path to the python script `script_name`
         (given without an extension) which should be contained somewhere inside
-        "dir_path" directory.
+        `dir_path` directory.
         '''
         for ext in settings.get('python_extensions', []):
             filename = path.join(dir_path, script_name + ext)
@@ -156,7 +156,7 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                 return path.abspath(filename)
 
     def _is_package(self, dir_path):
-        '''True, if the "dir_path" points to a Python package directory.
+        '''True, if the `dir_path` points to a Python package directory.
         '''
         return path.isdir(dir_path) and bool(self._get_python_script(dir_path, '__init__'))
 
