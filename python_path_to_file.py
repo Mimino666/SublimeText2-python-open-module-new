@@ -13,7 +13,7 @@ SYNTAX_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.tmLanguage')
 COLOR_SCHEME_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.stTheme')
 
 SCRIPT_PATH = path.join(LOCAL_DIR, 'module_finder.py')
-module_path_pattern = re.compile(r'^\.*\w+(\.\w+)*$')
+module_path_pattern = re.compile(r'^\s*\.*\w+(\.\w+)*\s*$')
 
 
 def debug(obj):
