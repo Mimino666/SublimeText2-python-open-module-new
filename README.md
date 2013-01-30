@@ -62,17 +62,18 @@ Examples:
     ----------------------------------------------------------------------------------
     os                      ->  os.py
     django.db               ->  django.db.__init__.py
-    
-    Prefix import paths with `+` to open them in new window (only works for modules from outside your project):
-    -----------------------------------------------------------------------------------------------------------
-    +django                 ->  Opens django project in the new window.
-    
+
+    Prefix import paths with `+` to open them in new window:
+    --------------------------------------------------------
+    +os                     ->  Opens os.py in the new window.
+    +django                 ->  Opens whole django project in the new window (because `django` is a package).
+
     Inside your project (MyProject/ is automatically included to sys.path):
     -----------------------------------------------------------------------
     x                       ->  x.py
     A.y                     ->  A/y.py
     A.B.z                   ->  A/B/z.py
-    
+
     Relative paths are resolved based on the current working file:
     --------------------------------------------------------------
     .B.z                    ->  A/B/z.py
@@ -81,7 +82,7 @@ Examples:
 
 If you try to input a path that Python would not be able to import from the current working file, nothing will be
 opened and you will receive an information in the status bar (at the bottom of ST2 window).
-  
+
 Virtual environment
 -------------------
 

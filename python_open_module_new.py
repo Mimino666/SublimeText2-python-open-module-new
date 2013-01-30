@@ -75,8 +75,14 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
     def _open_new_window(self, filename):
         subl_command = 'sublime_text' if sublime.platform() == 'windows' else 'subl'
         try:
+            # for packages, open the whole directory
+            if path.splitext(path.basename(filename))[0] == '__init__':
+                dirname = path.dirname(filename)
+            # for standalone python modules, open only the file
+            else:
+                dirname = ''
             subprocess.Popen(
-                [subl_command, path.dirname(filename), filename],
+                [subl_command, '-n', dirname, filename],
                 startupinfo=si)
         except OSError:
             sublime.status_message('Unable to open `%s` in a new window.'
