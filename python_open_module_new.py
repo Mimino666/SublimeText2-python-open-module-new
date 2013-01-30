@@ -50,6 +50,7 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         open_new_window = match.group('new_window')
         dots = match.group('dots')
         absolute_path = match.group('absolute_path')
+        input = '%s%s' % (dots, absolute_path)
 
         if dots:
             filename = self._get_relative_module_filename(dots, absolute_path)
