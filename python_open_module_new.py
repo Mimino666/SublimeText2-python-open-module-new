@@ -17,8 +17,6 @@ LOCAL_DIR = path.dirname(path.abspath(__file__))
 SYNTAX_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.tmLanguage')
 COLOR_SCHEME_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.stTheme')
 
-module_path_pattern = re.compile(r'\s*\+?^\s*\.*(\w+)?(\.\w+)*\s*$')
-
 si = None
 if hasattr(subprocess, 'STARTUPINFO'):
     si = subprocess.STARTUPINFO()
@@ -43,20 +41,21 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         panel_view.settings().set('color_scheme', COLOR_SCHEME_FILENAME)
 
     def on_done(self, input):
-        input = input.strip()
-        open_new_window = input.startswith('+')
-        input = input.lstrip('+').strip()
-
-        if not input:
-            return
-        if not module_path_pattern.match(input):
+        match = re.match(r'^\s*(?P<new_window>\+?)\s*(?P<dots>\.*)(?P<absolute_path>(?:\w+)?(?:\.\w+)*)\s*$', input)
+        if not match:
             sublime.status_message('Invalid python module path: `%s`' % input)
             return
 
-        if input.startswith('.'):
-            filename = self._get_relative_module_filename(input)
+        open_new_window = match.group('new_window')
+        dots = match.group('dots')
+        absolute_path = match.group('absolute_path')
+
+        if dots:
+            filename = self._get_relative_module_filename(dots, absolute_path)
+        elif absolute_path:
+            filename = self._get_absolute_module_filename(absolute_path)
         else:
-            filename = self._get_absolute_module_filename(input)
+            return
 
         if filename is None:
             sublime.status_message('Module `%s` not found' % input)
@@ -176,15 +175,11 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         except:
             pass
 
-    def _get_relative_module_filename(self, relative_path):
+    def _get_relative_module_filename(self, dots, absolute_path):
         '''Return the absolute path to the python script from the given
         relative module path. Relative path is relative to the working file.
         '''
-        relative_parsed = re.match(r'^(\.*)((?:\w+)?(?:\.\w+)*)$', relative_path)
-        dots = relative_parsed.group(1)
-        suffix = relative_parsed.group(2)
-
         start_path = self.window.active_view().file_name()
         for d in dots:
             start_path = path.dirname(start_path)
-        return self._get_absolute_module_filename(suffix, [start_path])
+        return self._get_absolute_module_filename(absolute_path, [start_path])
