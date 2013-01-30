@@ -7,8 +7,8 @@ Opens the Python module file based on the Python import path.
 
 More advanced and bugfree version of [PythonOpenModule](https://github.com/SublimeText/PythonOpenModule).
 
-Typical usecase
-===============
+Typical use case
+================
 
 You are reading a Python script and trying to understand why it works the way it works.
 
