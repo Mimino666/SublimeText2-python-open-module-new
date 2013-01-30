@@ -94,3 +94,13 @@ Modifying sys.path
 ------------------
 
 Use the setting `path` to modify the contents of sys.path, used for module search. See the default settings for reference
+
+FAQ
+===
+
+### Plugin doesn't work for `sys` or `datetime` modules. Is it a bug?
+
+No it is not a bug. Some modules simply doesn't have .py files available, thus cannot be opened.
+For example `sys` module is on your system probably as `sysmodule.c` file.
+For other modules, maybe only .pyc files are available.
+There is nothing that can be done about this. Sorry.
