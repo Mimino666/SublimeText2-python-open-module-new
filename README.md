@@ -58,7 +58,7 @@ Suppose the following directory tree of your Python project:
 
 Examples:
 
-    Type into input panel   ->  What file is opened (sys.path prefix to file ommited):
+    Type into input panel   ->  What file is opened (sys.path prefix to file omitted):
     ----------------------------------------------------------------------------------
     os                      ->  os.py
     django.db               ->  django.db.__init__.py
