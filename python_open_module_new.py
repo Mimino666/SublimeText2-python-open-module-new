@@ -160,14 +160,15 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         '''
         return path.isdir(dir_path) and bool(self._get_python_script(dir_path, '__init__'))
 
-    def _get_absolute_module_filename(self, absolute_path):
+    def _get_absolute_module_filename(self, absolute_path, start_path=None):
         '''Return the absolute path to the python script from the given
         absolute module path.
         '''
-        sys_path = self._get_sys_path()
+        sys_path = self._get_sys_path() if start_path is None else start_path
         try:
-            for bit in absolute_path.split('.'):
-                sys_path = [imp.find_module(bit, sys_path)[1]]
+            if absolute_path:
+                for bit in absolute_path.split('.'):
+                    sys_path = [imp.find_module(bit, sys_path)[1]]
             python_filename = sys_path[0]
             if path.isdir(python_filename):
                 python_filename = self._get_python_script(python_filename, '__init__')
@@ -179,23 +180,11 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         '''Return the absolute path to the python script from the given
         relative module path. Relative path is relative to the working file.
         '''
-        relative_path = relative_path.split('.')
+        relative_parsed = re.match(r'^(\.*)((?:\w+)?(?:\.\w+)*)$', relative_path)
+        dots = relative_parsed.group(1)
+        suffix = relative_parsed.group(2)
 
-        filename = self.window.active_view().file_name()
-        for bit in relative_path[:-1]:
-            if not bit:
-                filename = path.dirname(filename)
-            else:
-                filename = path.join(filename, bit)
-            if not path.exists(filename):
-                return
-            if not path.isdir(filename):
-                return
-            if not self._is_package(filename):
-                return
-
-        if self._is_package(path.join(filename, relative_path[-1])):
-            filename = path.join(filename, relative_path[-1])
-            return self._get_python_script(filename, '__init__')
-        else:
-            return self._get_python_script(filename, relative_path[-1])
+        start_path = self.window.active_view().file_name()
+        for d in dots:
+            start_path = path.dirname(start_path)
+        return self._get_absolute_module_filename(suffix, [start_path])
