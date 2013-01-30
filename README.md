@@ -26,8 +26,8 @@ Features
 * easy modification of sys.path contents through settings
 * automatically discoveres and includes Python packages in your currently opened project
 * handles relative paths
-* opens modules either in the current window or creates a new window
-* user-friendly input panel with syntax highlighting
+* user-friendly input panel with syntax highlighting (i.e. if you type bullshit, it turns red)
+* you can choose whether to view the modules in the current or a new window
 
 Install
 =======
@@ -63,10 +63,10 @@ Examples:
     os                      ->  os.py
     django.db               ->  django.db.__init__.py
 
-    Prefix import paths with `+` to open them in new window:
-    --------------------------------------------------------
-    +os                     ->  Opens os.py in the new window.
-    +django                 ->  Opens whole django project in the new window (because `django` is a package).
+    Prefix import paths with `+` to open them in a new window:
+    ----------------------------------------------------------
+    +os                     ->  Opens os.py in a new window.
+    +django                 ->  Opens whole django project in a new window (because `django` is a package).
 
     Inside your project (MyProject/ is automatically included to sys.path):
     -----------------------------------------------------------------------
@@ -93,4 +93,4 @@ to the path to the Python executable inside your venv directory.
 Modifying sys.path
 ------------------
 
-Use the setting `path` to modify the contents of sys.path, used for module search. See default settings for reference
+Use the setting `path` to modify the contents of sys.path, used for module search. See the default settings for reference
