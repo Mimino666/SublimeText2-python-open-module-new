@@ -31,7 +31,7 @@
 			<key>name</key>
 			<string>Invalid</string>
 			<key>scope</key>
-			<string>invalid.text.python_module_path</string>
+			<string>invalid.input_panel.python_module_path</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>

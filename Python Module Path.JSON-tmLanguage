@@ -1,15 +1,14 @@
 { "name": "Python module path",
-  "scopeName": "text.python_module_path",
-  "fileTypes": [""],
+  "scopeName": "input_panel.python_module_path",
   "patterns": [
     {
         "match": "^\\s*\\+?\\s*\\.*(\\w+)?(\\.\\w+)*\\s*$",
-        "name": "valid.text.python_module_path",
+        "name": "valid.input_panel.python_module_path",
         "comment": "Valid Python module path"
     },
     {
         "match": "^.*$",
-        "name": "invalid.text.python_module_path",
+        "name": "invalid.input_panel.python_module_path",
         "comment": "Invalid Python module path"
     }
   ],

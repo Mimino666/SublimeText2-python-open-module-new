@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>fileTypes</key>
-	<array>
-		<string></string>
-	</array>
 	<key>name</key>
 	<string>Python module path</string>
 	<key>patterns</key>
@@ -16,7 +12,7 @@
 			<key>match</key>
 			<string>^\s*\+?\s*\.*(\w+)?(\.\w+)*\s*$</string>
 			<key>name</key>
-			<string>valid.text.python_module_path</string>
+			<string>valid.input_panel.python_module_path</string>
 		</dict>
 		<dict>
 			<key>comment</key>
@@ -24,11 +20,11 @@
 			<key>match</key>
 			<string>^.*$</string>
 			<key>name</key>
-			<string>invalid.text.python_module_path</string>
+			<string>invalid.input_panel.python_module_path</string>
 		</dict>
 	</array>
 	<key>scopeName</key>
-	<string>text.python_module_path</string>
+	<string>input_panel.python_module_path</string>
 	<key>uuid</key>
 	<string>df0e97d4-06fc-4786-9427-04ffe1637b78</string>
 </dict>
