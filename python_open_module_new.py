@@ -34,7 +34,7 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
 
     def run(self):
         view = self.window.active_view()
-        text = view.substr(view.sel()[0])
+        text = '' if view is None else view.substr(view.sel()[0])
         panel_view = self.window.show_input_panel('Python module path:', text, self.on_done, None, None)
         panel_view.sel().clear()
         panel_view.sel().add(panel_view.visible_region())
@@ -175,7 +175,10 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         '''Return the absolute path to the python script from the given
         relative module path. Relative path is relative to the working file.
         '''
-        start_path = self.window.active_view().file_name()
+        view = self.window.active_view()
+        if view is None:
+            return
+        start_path = view.file_name()
         for d in dots:
             start_path = path.dirname(start_path)
         return self._get_absolute_module_filename(absolute_path, [start_path])
