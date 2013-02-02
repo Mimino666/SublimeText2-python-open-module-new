@@ -7,6 +7,8 @@ import sublime
 import sublime_plugin
 import subprocess
 import sys
+import threading
+import time
 
 
 SETTINGS_FILE = 'Python Open Module (New).sublime-settings'
@@ -24,15 +26,63 @@ if hasattr(subprocess, 'STARTUPINFO'):
     si.wShowWindow = subprocess.SW_HIDE
 
 
-def debug(obj):
+def debug(*args):
     with open(path.join(LOCAL_DIR, 'debug.txt'), 'ab') as f:
         f.write('%(line)s\n%(obj)s\n%(line)s\n\n' %
-            {'line': '=' * 40, 'obj': obj})
+            {'line': '=' * 40, 'obj': ' '.join(map(str, args))})
+
+
+class ProjectPackagesManager(object):
+    '''ProjectPackagesManager discovers and maintains the list of top-level
+    Python packages in the current project.
+    '''
+
+    def __init__(self):
+        self.packages = []
+        self.running = False
+        self.last_run = 0
+
+    def refresh(self, window):
+        cur_time = time.time()
+        if not self.running and cur_time - self.last_run >= 60:
+            self.running = True
+            self.last_run = cur_time
+            threading.Thread(target=self._find_project_packages, kwargs={
+                'root_folders': window.folders(),
+                'folder_exclude_patterns': prefs.get('folder_exclude_patterns', []),
+                'python_extensions': settings.get('python_extensions', ['.py']),
+            }).start()
+
+    def _find_project_packages(self, root_folders, folder_exclude_patterns, python_extensions):
+        exclude_folders = [path.join('*', folder) for folder in folder_exclude_patterns]
+        init_file_pattern = re.compile('__init__(%s)' % '|'.join(python_extensions).replace('.', r'\.'))
+        project_packages = set()
+
+        def is_ok(dir_path):
+            return all(not fnmatch(dir_path, x) for x in exclude_folders)
+
+        def is_package(files):
+            return any(init_file_pattern.match(x) for x in files)
+
+        for root_folder in root_folders:
+            for root, folders, files in os.walk(root_folder):
+                if is_package(files):
+                    project_packages.add(path.dirname(root))
+                    folders[:] = []
+                else:
+                    folders[:] = filter(lambda x: is_ok(path.join(root, x)), folders)
+        self.packages = list(project_packages)
+        self.running = False
 
 
 class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
 
+    def __init__(self, *args, **kwargs):
+        super(PythonOpenModuleNewCommand, self).__init__(*args, **kwargs)
+        self.project_packages = ProjectPackagesManager()
+
     def run(self):
+        self.project_packages.refresh(self.window)
         view = self.window.active_view()
         text = '' if view is None else view.substr(view.sel()[0])
         panel_view = self.window.show_input_panel('Python module path:', text, self.on_done, None, None)
@@ -99,25 +149,6 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                 return True
         return False
 
-    def _get_project_folders(self):
-        '''Return all the project directories, which contain a python package.
-        '''
-        exclude_folders = [path.join('*', folder) for folder in prefs.get('folder_exclude_patterns', [])]
-        project_folders = set()
-
-        def include(dir_path):
-            return all(not fnmatch(dir_path, x) for x in exclude_folders)
-
-        for root_folder in self.window.folders():
-            for root, folders, files in os.walk(root_folder):
-                # include only top-level packages
-                if self._get_python_script(root, '__init__'):
-                    project_folders.add(path.dirname(root))
-                    folders[:] = []
-                else:
-                    folders[:] = filter(lambda x: include(path.join(root, x)), folders)
-        return list(project_folders)
-
     def _get_sys_path(self):
         '''Return the sys path to be searched.
         We cannot simply use sys.path inside sublime script, because it is different.
@@ -143,7 +174,7 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         return (path_modifications.get('prepend', []) +
                 result_path +
                 path_modifications.get('append', []) +
-                self._get_project_folders())
+                self.project_packages.packages)
 
     def _get_python_script(self, dir_path, script_name):
         '''Return the absolute path to the python script `script_name`
