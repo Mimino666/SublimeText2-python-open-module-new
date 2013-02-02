@@ -105,24 +105,17 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         exclude_folders = [path.join('*', folder) for folder in prefs.get('folder_exclude_patterns', [])]
         project_folders = set()
 
-        def exclude(dir_path):
-            for pattern in exclude_folders:
-                if fnmatch(dir_path, pattern):
-                    return True
-            return False
+        def include(dir_path):
+            return all(not fnmatch(dir_path, x) for x in exclude_folders)
 
-        def visit(dir_path):
-            # include only top-level packages
-            if self._is_package(dir_path):
-                project_folders.add(path.dirname(dir_path))
-            else:
-                for next in os.listdir(dir_path):
-                    next = path.join(dir_path, next)
-                    if path.isdir(next) and not exclude(next):
-                        visit(next)
-
-        for dir_path in self.window.folders():
-            visit(dir_path)
+        for root_folder in self.window.folders():
+            for root, folders, files in os.walk(root_folder):
+                # include only top-level packages
+                if self._get_python_script(root, '__init__'):
+                    project_folders.add(path.dirname(root))
+                    folders[:] = []
+                else:
+                    folders[:] = filter(lambda x: include(path.join(root, x)), folders)
         return list(project_folders)
 
     def _get_sys_path(self):
@@ -157,15 +150,10 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         (given without an extension) which should be contained somewhere inside
         `dir_path` directory.
         '''
-        for ext in settings.get('python_extensions', []):
+        for ext in settings.get('python_extensions', ['.py']):
             filename = path.join(dir_path, script_name + ext)
             if path.exists(filename):
                 return path.abspath(filename)
-
-    def _is_package(self, dir_path):
-        '''True, if the `dir_path` points to a Python package directory.
-        '''
-        return path.isdir(dir_path) and bool(self._get_python_script(dir_path, '__init__'))
 
     def _get_absolute_module_filename(self, absolute_path, start_path=None):
         '''Return the absolute path to the python script from the given
