@@ -139,9 +139,9 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                 'Make sure `%s` is in $PATH.' % (filename, subl_command))
 
     def _is_inside_project(self, filename):
-        filename = path.realpath(filename)
+        filename = path.normcase(path.realpath(filename))
         for folder in self.window.folders():
-            folder = path.realpath(folder)
+            folder = path.normcase(path.realpath(folder))
             if folder == filename:
                 return True
             folder += os.sep
