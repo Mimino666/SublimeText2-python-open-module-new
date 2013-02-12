@@ -29,7 +29,7 @@ if hasattr(subprocess, 'STARTUPINFO'):
 def debug(*args):
     with open(path.join(LOCAL_DIR, 'debug.txt'), 'ab') as f:
         f.write('%(line)s\n%(obj)s\n%(line)s\n\n' %
-            {'line': '=' * 40, 'obj': ' '.join(map(str, args))})
+                {'line': '=' * 40, 'obj': ' '.join(map(str, args))})
 
 
 class ProjectPackagesManager(object):
@@ -49,13 +49,17 @@ class ProjectPackagesManager(object):
             self.last_run = cur_time
             threading.Thread(target=self._find_project_packages, kwargs={
                 'root_folders': window.folders(),
-                'folder_exclude_patterns': prefs.get('folder_exclude_patterns', []),
-                'python_extensions': settings.get('python_extensions', ['.py']),
+                'folder_exclude_patterns': prefs.get(
+                    'folder_exclude_patterns', []),
+                'python_extensions': settings.get(
+                    'python_extensions', ['.py']),
             }).start()
 
-    def _find_project_packages(self, root_folders, folder_exclude_patterns, python_extensions):
-        exclude_folders = [path.join('*', folder) for folder in folder_exclude_patterns]
-        init_file_pattern = re.compile('__init__(%s)' % '|'.join(python_extensions).replace('.', r'\.'))
+    def _find_project_packages(self, root_folders, folder_exclude_patterns,
+                               python_extensions):
+        exclude_folders = [path.join('*', x) for x in folder_exclude_patterns]
+        init_file_pattern = re.compile(
+            '__init__(%s)' % '|'.join(python_extensions).replace('.', r'\.'))
         project_packages = set()
 
         def is_ok(dir_path):
@@ -70,7 +74,8 @@ class ProjectPackagesManager(object):
                     project_packages.add(path.dirname(root))
                     folders[:] = []
                 else:
-                    folders[:] = filter(lambda x: is_ok(path.join(root, x)), folders)
+                    folders[:] = filter(lambda x: is_ok(path.join(root, x)),
+                                        folders)
         self.packages = list(project_packages)
         self.running = False
 
@@ -85,14 +90,16 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         self.project_packages.refresh(self.window)
         view = self.window.active_view()
         text = '' if view is None else view.substr(view.sel()[0])
-        panel_view = self.window.show_input_panel('Python module path:', text, self.on_done, None, None)
+        panel_view = self.window.show_input_panel(
+            'Python module path:', text, self.on_done, None, None)
         panel_view.sel().clear()
         panel_view.sel().add(panel_view.visible_region())
         panel_view.settings().set('syntax', SYNTAX_FILENAME)
         panel_view.settings().set('color_scheme', COLOR_SCHEME_FILENAME)
 
     def on_done(self, input):
-        match = re.match(r'^\s*(?P<new_window>\+?)\s*(?P<dots>\.*)(?P<absolute_path>(?:\w+)?(?:\.\w+)*)\s*$', input)
+        match = re.match(r'^\s*(?P<new_window>\+?)\s*(?P<dots>\.*)'
+                         r'(?P<absolute_path>(?:\w+)?(?:\.\w+)*)\s*$', input)
         if not match:
             sublime.status_message('Invalid python module path: `%s`' % input)
             return
@@ -123,7 +130,10 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                 self.window.open_file(filename, sublime.TRANSIENT)
 
     def _open_new_window(self, filename):
-        subl_command = 'sublime_text' if sublime.platform() == 'windows' else 'subl'
+        if sublime.platform() == 'windows':
+            subl_command = 'sublime_text'
+        else:
+            subl_command = 'subl'
         try:
             # for packages, open the whole directory
             if path.splitext(path.basename(filename))[0] == '__init__':
@@ -135,7 +145,8 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                 [subl_command, '-n', dirname, filename],
                 startupinfo=si)
         except OSError:
-            sublime.status_message('Unable to open `%s` in a new window.'
+            sublime.status_message(
+                'Unable to open `%s` in a new window.'
                 'Make sure `%s` is in $PATH.' % (filename, subl_command))
 
     def _is_inside_project(self, filename):
@@ -165,10 +176,11 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
             'import sys;'
             'print "result_path=", sys.path;'
             'print "imported_modules=", dict((k, m.__path__[0]) for (k, m) in '
-                'sys.modules.items() if hasattr(m, "__path__"));'
+            'sys.modules.items() if hasattr(m, "__path__"));'
         )
 
-        path_modifications = settings.get('path',
+        path_modifications = settings.get(
+            'path',
             {'prepend': [], 'append': [], 'replace': []})
         imported_modules = {}
         if path_modifications.get('replace'):
@@ -184,11 +196,14 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                 exec python.communicate()[0]
             except:
                 result_path = sys.path
-        return ((path_modifications.get('prepend', []) +
-                    result_path +
-                    path_modifications.get('append', []) +
-                    self.project_packages.packages),
-                imported_modules)
+        return (
+            (
+                path_modifications.get('prepend', []) +
+                result_path +
+                path_modifications.get('append', []) +
+                self.project_packages.packages
+            ),
+            imported_modules)
 
     def _get_python_script(self, dir_path, script_name):
         '''Return the absolute path to the python script `script_name`
