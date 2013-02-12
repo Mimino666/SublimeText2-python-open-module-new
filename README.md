@@ -10,11 +10,11 @@ More advanced and bugfree version of [PythonOpenModule](https://github.com/Subli
 Typical use case
 ================
 
-You are reading a Python script and trying to understand why it works the way it works.
+Imagine you are reading some Python script and trying to understand why it works the way it works.
 
 
 At the top of the script you see `from some.very.mysterious.module import muhahaha`.
-Are you curious what `muhahaha()` is doing? Simple enough!
+Are you curious what `muhahaha` is doing? Simple enough!
 
 
 Highlight `some.very.mysterious.module`, press <kbd>Alt+Shift+o</kbd>, <kbd>Enter</kbd> and enjoy.
@@ -25,7 +25,7 @@ Features
 * works with virtual environments
 * easy modification of sys.path contents through settings
 * automatically discoveres and includes Python packages in your currently opened project
-* handles relative paths
+* resolves relative paths and .pth files
 * user-friendly input panel with syntax highlighting (i.e. if you type bullshit, it turns red)
 * you can choose whether to view the modules in the current or a new window
 
@@ -88,7 +88,7 @@ Virtual environment
 
 If you are using virtual environment, you need to set the setting `python_executable`
 (Preferences > Package Settings > PythonOpenModule(New) > Settings - User)
-to the path to the Python executable inside your venv directory.
+to the path pointing to the Python executable inside your venv directory.
 
 Modifying sys.path
 ------------------
