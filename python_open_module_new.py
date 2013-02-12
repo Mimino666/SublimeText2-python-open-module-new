@@ -150,31 +150,45 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         return False
 
     def _get_sys_path(self):
-        '''Return the sys path to be searched.
-        We cannot simply use sys.path inside sublime script, because it is different.
-        Also take into account user preferences, such as venv, path setting and
-        current project.
+        '''Return the sys path to be searched with user preferences (e.g. venv,
+        path setting) and the current project taken into account.
+
+        We cannot simply use sys.path inside the sublime script, because it is
+        modified by ST2. We need to ask external Python script for this.
+
+        Update: as a second return value, return the dictionary of already
+        imported modules (received from sys.modules). This solves problems
+        with some .pth scripts
+        (e.g. `zc` module from http://pypi.python.org/pypi/zc.queue)
         '''
+        python_script = (
+            'import sys;'
+            'print "result_path=", sys.path;'
+            'print "imported_modules=", dict((k, m.__path__[0]) for (k, m) in '
+                'sys.modules.items() if hasattr(m, "__path__"));'
+        )
+
         path_modifications = settings.get('path',
             {'prepend': [], 'append': [], 'replace': []})
-
+        imported_modules = {}
         if path_modifications.get('replace'):
             result_path = path_modifications['replace']
         else:
             python_exec = settings.get('python_executable') or 'python'
             try:
                 python = subprocess.Popen(
-                    [python_exec, '-u', '-c', 'import sys; print sys.path'],
+                    [python_exec, '-u', '-c', python_script],
                     stdout=subprocess.PIPE,
                     startupinfo=si
                 )
-                result_path = eval(python.communicate()[0])
+                exec python.communicate()[0]
             except:
                 result_path = sys.path
-        return (path_modifications.get('prepend', []) +
-                result_path +
-                path_modifications.get('append', []) +
-                self.project_packages.packages)
+        return ((path_modifications.get('prepend', []) +
+                    result_path +
+                    path_modifications.get('append', []) +
+                    self.project_packages.packages),
+                imported_modules)
 
     def _get_python_script(self, dir_path, script_name):
         '''Return the absolute path to the python script `script_name`
@@ -190,14 +204,27 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         '''Return the absolute path to the python script from the given
         absolute module path.
         '''
-        sys_path = self._get_sys_path() if start_path is None else start_path
+        if start_path is None:
+            sys_path, imported_modules = self._get_sys_path()
+        else:
+            sys_path, imported_modules = start_path, {}
+
+        module_path_parts = absolute_path.split('.') if absolute_path else []
+        # first try to look in `imported_modules`
+        for num_parts in xrange(len(module_path_parts), 0, -1):
+            prefix = '.'.join(module_path_parts[0:num_parts])
+            if prefix in imported_modules:
+                sys_path = [imported_modules[prefix]]
+                del module_path_parts[0:num_parts]
+                break
+
         try:
-            if absolute_path:
-                for bit in absolute_path.split('.'):
-                    sys_path = [imp.find_module(bit, sys_path)[1]]
+            for bit in module_path_parts:
+                sys_path = [imp.find_module(bit, sys_path)[1]]
             python_filename = sys_path[0]
             if path.isdir(python_filename):
-                python_filename = self._get_python_script(python_filename, '__init__')
+                return (self._get_python_script(python_filename, '__init__') or
+                        python_filename)
             return python_filename
         except:
             pass
