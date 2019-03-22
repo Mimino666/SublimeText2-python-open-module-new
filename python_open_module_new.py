@@ -15,9 +15,8 @@ SETTINGS_FILE = 'Python Open Module (New).sublime-settings'
 settings = sublime.load_settings(SETTINGS_FILE)
 prefs = sublime.load_settings('Preferences.sublime-settings')
 
-LOCAL_DIR = path.dirname(path.abspath(__file__))
-SYNTAX_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.tmLanguage')
-COLOR_SCHEME_FILENAME = path.join(LOCAL_DIR, 'Python Module Path.stTheme')
+SYNTAX_FILENAME = path.join('Packages', 'Python Open Module (New)', 'Python Module Path.tmLanguage')
+COLOR_SCHEME_FILENAME = path.join('Packages', 'Python Open Module (New)', 'Python Module Path.stTheme')
 
 si = None
 if hasattr(subprocess, 'STARTUPINFO'):
@@ -27,6 +26,7 @@ if hasattr(subprocess, 'STARTUPINFO'):
 
 
 def debug(*args):
+    LOCAL_DIR = path.dirname(path.abspath(__file__))
     with open(path.join(LOCAL_DIR, 'debug.txt'), 'ab') as f:
         f.write('%(line)s\n%(obj)s\n%(line)s\n\n' %
                 {'line': '=' * 40, 'obj': ' '.join(map(str, args))})
@@ -174,9 +174,8 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
         '''
         python_script = (
             'import sys;'
-            'print "result_path=", sys.path;'
-            'print "imported_modules=", dict((k, m.__path__[0]) for (k, m) in '
-            'sys.modules.items() if hasattr(m, "__path__"));'
+            'print sys.path;'
+            'print dict((k, m.__path__[0]) for (k, m) in sys.modules.items() if hasattr(m, "__path__"));'
         )
 
         path_modifications = settings.get(
@@ -193,7 +192,7 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
                     stdout=subprocess.PIPE,
                     startupinfo=si
                 )
-                exec python.communicate()[0]
+                result_path, imported_modules = map(eval, python.communicate()[0].decode('utf-8').split('\n')[:2])
             except:
                 result_path = sys.path
         return (
@@ -226,7 +225,7 @@ class PythonOpenModuleNewCommand(sublime_plugin.WindowCommand):
 
         module_path_parts = absolute_path.split('.') if absolute_path else []
         # first try to look in `imported_modules`
-        for num_parts in xrange(len(module_path_parts), 0, -1):
+        for num_parts in range(len(module_path_parts), 0, -1):
             prefix = '.'.join(module_path_parts[0:num_parts])
             if prefix in imported_modules:
                 sys_path = [imported_modules[prefix]]
