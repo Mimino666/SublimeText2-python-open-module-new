@@ -1,4 +1,5 @@
-{ "name": "Python module path",
+{
+  "name": "Python module path",
   "scopeName": "input_panel.python_module_path",
   "patterns": [
     {
